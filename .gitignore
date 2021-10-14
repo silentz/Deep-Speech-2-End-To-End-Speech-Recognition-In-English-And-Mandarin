@@ -1,6 +1,8 @@
 
 # project specific
 
+data/*
+!data/**/.gitkeep
 venv/
 lightning_logs/
 

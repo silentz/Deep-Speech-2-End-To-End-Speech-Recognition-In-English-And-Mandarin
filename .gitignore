@@ -1,0 +1,15 @@
+
+# project specific
+
+venv/
+lightning_logs/
+
+# system specific
+
+.DS_Store
+
+# python garbage
+
+*.pyc
+.ipynb_checkpoints/
+__pycache__/

@@ -3,6 +3,7 @@ from torch.utils.data import Dataset
 from torchaudio.datasets import LIBRISPEECH
 from torchtyping import TensorType
 from typing import Tuple
+from .text import encode
 
 
 class LibriSpeechDataset(Dataset):
@@ -13,6 +14,7 @@ class LibriSpeechDataset(Dataset):
     def __len__(self):
         return len(self.dataset)
 
-    def __getitem__(self, idx: int) -> Tuple[TensorType['wave'], str]:
+    def __getitem__(self, idx: int) -> Tuple[TensorType['wave'], TensorType['text']]:
         wave, _, text, _, _, _ = self.dataset[idx]
-        return torch.mean(wave, dim=0), text
+        text = encode(text)
+        return torch.mean(wave, dim=0), torch.LongTensor(text)

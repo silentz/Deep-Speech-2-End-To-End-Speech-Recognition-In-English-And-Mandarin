@@ -2,13 +2,13 @@ from typing import List
 
 
 _idx2char = [
-    ' ', "'", 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
+    '@', ' ', "'", 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
     'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
 ]
 
 _char2idx = {char: idx for idx, char in enumerate(_idx2char)}
 
-empty_token_str = ' '
+empty_token_str = '@'
 empty_token_int = _char2idx[empty_token_str]
 
 

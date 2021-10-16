@@ -59,5 +59,6 @@ class ASRModel(nn.Module):
         X, _ = self.rnn_filter(X) # bs, time, hidden_size
 
         X = self.head(X)
+        X = torch.log_softmax(X, dim=2)
         return X
 

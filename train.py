@@ -6,6 +6,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.utilities.cli import LightningCLI
 
 from src.dataset import LibriSpeechDataset
+from src.dataset import librispeech_collate_fn
 from src.model import ASRModel
 
 from typing import (
@@ -33,6 +34,7 @@ class LibrispeechDataModule(pl.LightningDataModule):
         self.train_dataloader_kwargs = {
                 'batch_size': train_batch_size,
                 'num_workers': train_num_workers,
+                'collate_fn': librispeech_collate_fn,
             }
         self.val_dataset_kwargs = {
                 'root': val_root,
@@ -41,6 +43,7 @@ class LibrispeechDataModule(pl.LightningDataModule):
         self.val_dataloader_kwargs = {
                 'batch_size': val_batch_size,
                 'num_workers': val_num_workers,
+                'collate_fn': librispeech_collate_fn,
             }
 
     def train_dataloader(self) -> DataLoader:
@@ -69,13 +72,37 @@ class ASRLightningModule(pl.LightningModule):
             }
 
     def training_step(self, batch, batch_idx) -> Dict[str, Any]:
-        print(batch)
+        waves, texts = batch['waves'], batch['texts']
+        waves_len, texts_len = batch['waves_len'], batch['texts_len']
+
+        model_out = self.model(waves)
+
+        ctc_reshaped = torch.transpose(model_out, 0, 1) # swap time and bn dim
+        waves_len_coefs = waves_len / waves.shape[1]
+        ctc_waves_len = waves_len_coefs * ctc_reshaped.shape[0]
+        loss = self.criterion(ctc_reshaped, texts, ctc_waves_len.long(), texts_len)
+
+        return {
+                'loss': loss,
+            }
 
     def training_epoch_end(self, outputs: List[Dict[str, Any]]) -> None:
         pass
 
     def validation_step(self, batch, batch_idx) -> Dict[str, Any]:
-        print(batch)
+        waves, texts = batch['waves'], batch['texts']
+        waves_len, texts_len = batch['waves_len'], batch['texts_len']
+
+        model_out = self.model(waves)
+
+        ctc_reshaped = torch.transpose(model_out, 0, 1) # swap time and bn dim
+        waves_len_coefs = waves_len / waves.shape[1]
+        ctc_waves_len = waves_len_coefs * ctc_reshaped.shape[0]
+        loss = self.criterion(ctc_reshaped, texts, ctc_waves_len.long(), texts_len)
+
+        return {
+                'loss': loss,
+            }
 
     def validation_epoch_end(self, outputs: List[Dict[str, Any]]) -> None:
         pass

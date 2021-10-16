@@ -26,6 +26,22 @@ class LibrispeechDataset(Dataset):
             }
 
 
+class OverfitDataset(Dataset):
+
+    def __init__(self, dataset: Dataset,
+                       num_samples: int,
+                       length: int):
+        self.dataset = dataset
+        self.num_samples = num_samples
+        self.length = length
+
+    def __getitem__(self, idx: int):
+        return self.dataset[idx % self.num_samples]
+
+    def __len__(self):
+        return self.length
+
+
 def librispeech_collate_fn(values: list) -> Dict[str, Any]:
     waves = [x['wave'] for x in values]
     texts = [x['text'] for x in values]

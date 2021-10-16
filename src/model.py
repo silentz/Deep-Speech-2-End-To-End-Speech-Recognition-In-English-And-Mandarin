@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torchaudio.transforms import MelSpectrogram
 from torchtyping import TensorType
 
 
@@ -8,8 +9,21 @@ class ASRModel(nn.Module):
     def __init__(self, n_classes: int,
                        rnn_num_layers: int,
                        rnn_hidden_size: int,
-                       rnn_input_size: int):
+                       rnn_input_size: int,
+                       sample_rate: int,
+                       n_fft: int,
+                       win_length: int,
+                       hop_length: int,
+                       n_mels: int):
         super().__init__()
+
+        self.mel_spectrogram = MelSpectrogram(
+                sample_rate=sample_rate,
+                n_fft=n_fft,
+                win_length=win_length,
+                hop_length=hop_length,
+                n_mels=n_mels,
+            )
 
         self.conv_filter = nn.Sequential(
                 nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(8, 32),
@@ -34,7 +48,8 @@ class ASRModel(nn.Module):
                 nn.Linear(in_features=rnn_hidden_size, out_features=n_classes, bias=True),
             )
 
-    def forward(self, X: TensorType['batch', 'n_mels', 'time']):
+    def forward(self, X: TensorType['batch', 'wav']):
+        X = self.mel_spectrogram(X)
         X = torch.unsqueeze(X, dim=1) # add channel dim
         X = self.conv_filter(X)
 

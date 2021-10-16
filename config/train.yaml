@@ -3,7 +3,7 @@ seed_everything: 42
 trainer:
   gpus: 1
   check_val_every_n_epoch: 1
-  fast_dev_run: true
+  fast_dev_run: false
   accumulate_grad_batches: 1
   max_epochs: 10
   precision: 32
@@ -36,8 +36,8 @@ data:
   train_root: 'data/'
   train_df_url: 'train-clean-360'
   train_batch_size: 32
-  train_num_workers: 1 # TODO: fix
+  train_num_workers: 32
   val_root: 'data/'
   val_df_url: 'test-clean'
   val_batch_size: 32
-  val_num_workers: 1 # TODO: fix
+  val_num_workers: 16

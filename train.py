@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
 import pytorch_lightning as pl
@@ -8,7 +9,6 @@ from pytorch_lightning.utilities.cli import LightningCLI
 from src import text
 from src import metrics
 from src.model import ASRModel
-from src.dataset import LibriSpeechDataset
 from src.dataset import librispeech_collate_fn
 
 from typing import (
@@ -20,27 +20,20 @@ from typing import (
 
 class LibrispeechDataModule(pl.LightningDataModule):
 
-    def __init__(self, train_root: str,
-                       train_df_url: str,
+    def __init__(self, train_dataset: Dataset,
                        train_batch_size: int,
                        train_num_workers: int,
-                       val_root: str,
-                       val_df_url: str,
+                       val_dataset: Dataset,
                        val_batch_size: int,
                        val_num_workers: int):
         super().__init__()
-        self.train_dataset_kwargs = {
-                'root': train_root,
-                'url': train_df_url,
-            }
+        self.train_dataset = train_dataset
+        self.val_dataset = val_dataset
+
         self.train_dataloader_kwargs = {
                 'batch_size': train_batch_size,
                 'num_workers': train_num_workers,
                 'collate_fn': librispeech_collate_fn,
-            }
-        self.val_dataset_kwargs = {
-                'root': val_root,
-                'url': val_df_url,
             }
         self.val_dataloader_kwargs = {
                 'batch_size': val_batch_size,
@@ -49,12 +42,10 @@ class LibrispeechDataModule(pl.LightningDataModule):
             }
 
     def train_dataloader(self) -> DataLoader:
-        dataset = LibriSpeechDataset(**self.train_dataset_kwargs)
-        return DataLoader(dataset, **self.train_dataloader_kwargs)
+        return DataLoader(self.train_dataset, **self.train_dataloader_kwargs)
 
     def val_dataloader(self) -> DataLoader:
-        dataset = LibriSpeechDataset(**self.val_dataset_kwargs)
-        return DataLoader(dataset, **self.val_dataloader_kwargs)
+        return DataLoader(self.val_dataset, **self.val_dataloader_kwargs)
 
 
 class ASRLightningModule(pl.LightningModule):

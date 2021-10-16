@@ -6,7 +6,7 @@ from typing import Any, Dict
 from .text import encode
 
 
-class LibriSpeechDataset(Dataset):
+class LibrispeechDataset(Dataset):
 
     def __init__(self, root: str, url: str):
         self.dataset = LIBRISPEECH(root=root, url=url, download=True)

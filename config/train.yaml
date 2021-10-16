@@ -33,11 +33,17 @@ model:
   optimizer_lr: 0.001
 
 data:
-  train_root: 'data/'
-  train_df_url: 'train-clean-360'
+  train_dataset:
+    class_path: src.dataset.LibrispeechDataset
+    init_args:
+      root: 'data/'
+      url: 'train-clean-360'
   train_batch_size: 32
   train_num_workers: 32
-  val_root: 'data/'
-  val_df_url: 'test-clean'
+  val_dataset:
+    class_path: src.dataset.LibrispeechDataset
+    init_args:
+      root: 'data/'
+      url: 'test-clean'
   val_batch_size: 32
   val_num_workers: 16

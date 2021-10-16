@@ -69,13 +69,13 @@ class ASRLightningModule(pl.LightningModule):
             }
 
     def training_step(self, batch, batch_idx) -> Dict[str, Any]:
-        pass
+        print(batch)
 
     def training_epoch_end(self, outputs: List[Dict[str, Any]]) -> None:
         pass
 
     def validation_step(self, batch, batch_idx) -> Dict[str, Any]:
-        pass
+        print(batch)
 
     def validation_epoch_end(self, outputs: List[Dict[str, Any]]) -> None:
         pass

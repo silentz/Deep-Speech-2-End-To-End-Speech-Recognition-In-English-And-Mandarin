@@ -64,6 +64,25 @@ class ASRLightningModule(pl.LightningModule):
                 'optimizer': optim,
             }
 
+    @staticmethod
+    def _decode_batch(model_out: torch.Tensor,
+                      texts: torch.LongTensor,
+                      texts_len: torch.LongTensor):
+        probs = torch.exp(model_out.detach())
+        batch_size = probs.shape[0]
+        predicted_lines = []
+        target_lines = []
+
+        for idx in range(batch_size):
+            pred_line = text.ctc_decode(probs[idx], size=100)
+            predicted_lines.append(pred_line)
+
+            targ_line = texts[idx][:texts_len[idx]]
+            targ_line = text.decode(targ_line)
+            target_lines.append(targ_line)
+
+        return predicted_lines, target_lines
+
     def training_step(self, batch, batch_idx) -> Dict[str, Any]:
         waves, texts = batch['waves'], batch['texts']
         waves_len, texts_len = batch['waves_len'], batch['texts_len']
@@ -75,15 +94,20 @@ class ASRLightningModule(pl.LightningModule):
         ctc_waves_len = waves_len_coefs * ctc_reshaped.shape[0]
         loss = self.criterion(ctc_reshaped, texts, ctc_waves_len.long(), texts_len)
 
+        self.log('loss', loss.item(), logger=True)
+
+        if batch_idx % 100 == 0:
+            pred, target = self._decode_batch(model_out, texts, texts_len)
+            cer = metrics.cer(pred=pred, target=target)
+            wer = metrics.wer(pred=pred, target=target)
+            self.log('train_cer', cer, prog_bar=True, logger=True)
+            self.log('train_wer', wer, prog_bar=True, logger=True)
+
         return {
                 'loss': loss,
             }
 
-    def training_epoch_end(self, outputs: List[Dict[str, Any]]) -> None:
-        pass
-
     def validation_step(self, batch, batch_idx) -> Dict[str, Any]:
-        batch_size = len(batch)
         waves, texts = batch['waves'], batch['texts']
         waves_len, texts_len = batch['waves_len'], batch['texts_len']
 
@@ -94,17 +118,7 @@ class ASRLightningModule(pl.LightningModule):
         ctc_waves_len = waves_len_coefs * ctc_reshaped.shape[0]
         loss = self.criterion(ctc_reshaped, texts, ctc_waves_len.long(), texts_len)
 
-        probs = torch.exp(model_out.detach())
-        predicted_lines = []
-        target_lines = []
-
-        for idx in range(batch_size):
-            pred_line = text.ctc_decode(probs[idx], size=100)
-            predicted_lines.append(pred_line)
-
-            targ_line = texts[idx][:texts_len[idx]]
-            targ_line = text.decode(targ_line)
-            target_lines.append(targ_line)
+        predicted_lines, target_lines = self._decode_batch(model_out, texts, texts_len)
 
         return {
                 'loss': loss,
@@ -125,12 +139,13 @@ class ASRLightningModule(pl.LightningModule):
 
         wer = metrics.wer(pred=pred, target=target)
         cer = metrics.cer(pred=pred, target=target)
-        print('WER:', wer)
-        print('CER:', cer)
+        self.log('val_cer', cer, logger=True)
+        self.log('val_wer', wer, logger=True)
 
 
 if __name__ == '__main__':
     LightningCLI(
             ASRLightningModule,
             LibrispeechDataModule,
+            save_config_overwrite=True,
         )

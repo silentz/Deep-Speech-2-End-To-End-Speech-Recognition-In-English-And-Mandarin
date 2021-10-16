@@ -2,14 +2,16 @@ seed_everything: 42
 
 trainer:
   gpus: 1
-  overfit_batches: 1
-  limit_train_batches: 5000
-  check_val_every_n_epoch: 1
   accumulate_grad_batches: 1
   precision: 32
   num_sanity_val_steps: 0
   deterministic: true
   auto_lr_find: false
+  logger:
+    - class_path: pytorch_lightning.loggers.WandbLogger
+      init_args:
+        project: hw1-asr
+        save_dir: lightning_logs/
 
 model:
   model:
@@ -33,11 +35,27 @@ model:
   optimizer_lr: 0.001
 
 data:
-  train_root: 'data/'
-  train_df_url: 'train-clean-360'
+  train_dataset:
+    class_path: src.dataset.OverfitDataset
+    init_args:
+      dataset:
+        class_path: src.dataset.LibrispeechDataset
+        init_args:
+          root: 'data/'
+          url: 'train-clean-360'
+      num_samples: 32
+      length: 32000
   train_batch_size: 32
   train_num_workers: 1
-  val_root: 'data/'
-  val_df_url: 'test-clean'
+  val_dataset:
+    class_path: src.dataset.OverfitDataset
+    init_args:
+      dataset:
+        class_path: src.dataset.LibrispeechDataset
+        init_args:
+          root: 'data/'
+          url: 'train-clean-360'
+      num_samples: 32
+      length: 32
   val_batch_size: 32
   val_num_workers: 1

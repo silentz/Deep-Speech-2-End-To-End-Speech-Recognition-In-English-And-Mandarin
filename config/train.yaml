@@ -10,6 +10,11 @@ trainer:
   num_sanity_val_steps: 2
   deterministic: true
   auto_lr_find: false
+  logger:
+    - class_path: pytorch_lightning.loggers.WandbLogger
+      init_args:
+        project: hw1-asr
+        save_dir: lightning_logs/
 
 model:
   model:

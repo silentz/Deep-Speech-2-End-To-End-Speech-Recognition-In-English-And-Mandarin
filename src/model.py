@@ -26,12 +26,12 @@ class ASRModel(nn.Module):
             )
 
         self.conv_filter = nn.Sequential(
-                nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(8, 32),
-                          stride=(2, 4), bias=False),
+                nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(8, 8),
+                          stride=(2, 1), bias=False),
                 nn.BatchNorm2d(num_features=32),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(8, 16),
-                          stride=(2, 4), bias=False),
+                nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(8, 8),
+                          stride=(2, 1), bias=False),
                 nn.BatchNorm2d(num_features=32),
                 nn.ReLU(inplace=True),
             )

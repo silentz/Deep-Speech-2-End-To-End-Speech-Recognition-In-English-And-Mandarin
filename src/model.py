@@ -9,7 +9,6 @@ class ASRModel(nn.Module):
     def __init__(self, n_classes: int,
                        rnn_num_layers: int,
                        rnn_hidden_size: int,
-                       rnn_input_size: int,
                        sample_rate: int,
                        n_fft: int,
                        win_length: int,
@@ -26,18 +25,27 @@ class ASRModel(nn.Module):
             )
 
         self.conv_filter = nn.Sequential(
-                nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(8, 8),
-                          stride=(2, 1), bias=False),
+                nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(41, 11),
+                          stride=(2, 2), bias=False),
                 nn.BatchNorm2d(num_features=32),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(8, 8),
+                nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(21, 11),
                           stride=(2, 1), bias=False),
                 nn.BatchNorm2d(num_features=32),
                 nn.ReLU(inplace=True),
             )
 
+        out_channels = 1
+        out_n_mels = n_mels
+
+        for layer in self.conv_filter.children():
+            if isinstance(layer, nn.Conv2d):
+                out_n_mels -= (layer.kernel_size[0] - 1)
+                out_n_mels //= layer.stride[0]
+                out_channels = layer.out_channels
+
         self.rnn_filter = nn.GRU(
-                input_size=rnn_input_size,
+                input_size=out_channels * out_n_mels,
                 hidden_size=rnn_hidden_size,
                 num_layers=rnn_num_layers,
                 batch_first=True,
@@ -46,13 +54,13 @@ class ASRModel(nn.Module):
 
         self.head = nn.Sequential(
                 nn.Dropout(p=0.2),
-                nn.Linear(in_features=rnn_hidden_size, out_features=rnn_hidden_size, bias=True),
-                nn.ReLU(inplace=True),
-                nn.Dropout(p=0.2),
-                nn.Linear(in_features=rnn_hidden_size, out_features=rnn_hidden_size, bias=True),
-                nn.ReLU(inplace=True),
-                nn.Dropout(p=0.2),
                 nn.Linear(in_features=rnn_hidden_size, out_features=n_classes, bias=True),
+                #  nn.ReLU(inplace=True),
+                #  nn.Dropout(p=0.2),
+                #  nn.Linear(in_features=rnn_hidden_size, out_features=rnn_hidden_size, bias=True),
+                #  nn.ReLU(inplace=True),
+                #  nn.Dropout(p=0.2),
+                #  nn.Linear(in_features=rnn_hidden_size, out_features=n_classes, bias=True),
             )
 
     def forward(self, X: TensorType['batch', 'wav']):

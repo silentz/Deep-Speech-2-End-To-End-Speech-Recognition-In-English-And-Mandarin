@@ -21,14 +21,13 @@ model:
     class_path: src.model.ASRModel
     init_args:
       n_classes: 29
-      rnn_num_layers: 1
-      rnn_input_size: 352
-      rnn_hidden_size: 2400
+      rnn_num_layers: 5
+      rnn_hidden_size: 1024
       sample_rate: 16000
-      n_fft: 1024
-      win_length: 1024
-      hop_length: 256
-      n_mels: 64
+      n_fft: 320
+      win_length: 320
+      hop_length: 160
+      n_mels: 160
   criterion:
     class_path: torch.nn.CTCLoss
     init_args:

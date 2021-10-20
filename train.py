@@ -96,15 +96,8 @@ class ASRLightningModule(pl.LightningModule):
 
         self.log('loss', loss.item(), logger=True)
 
-        if batch_idx % 100 == 0:
-            pred, target = self._decode_batch(model_out, texts, texts_len)
-            cer = metrics.cer(pred=pred, target=target)
-            wer = metrics.wer(pred=pred, target=target)
-            self.log('train_cer', cer, prog_bar=True, logger=True)
-            self.log('train_wer', wer, prog_bar=True, logger=True)
-
         return {
-                'loss': loss,
+                'loss': loss.item(),
             }
 
     def validation_step(self, batch, batch_idx) -> Dict[str, Any]:
@@ -121,7 +114,7 @@ class ASRLightningModule(pl.LightningModule):
         predicted_lines, target_lines = self._decode_batch(model_out, texts, texts_len)
 
         return {
-                'loss': loss,
+                'loss': loss.item(),
                 'pred_lines': predicted_lines,
                 'target_lines': target_lines,
             }

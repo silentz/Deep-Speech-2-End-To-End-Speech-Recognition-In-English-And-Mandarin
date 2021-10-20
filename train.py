@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
+import wandb
 import pytorch_lightning as pl
 from pytorch_lightning.utilities.cli import LightningCLI
 
@@ -52,11 +53,13 @@ class ASRLightningModule(pl.LightningModule):
 
     def __init__(self, model: ASRModel,
                        criterion: nn.Module,
-                       optimizer_lr: float):
+                       optimizer_lr: float,
+                       n_examples: int):
         super().__init__()
         self.model = model
         self.criterion = criterion
         self.optimizer_lr = optimizer_lr
+        self.n_examples = n_examples
 
     def configure_optimizers(self) -> Dict[str, Any]:
         optim = torch.optim.Adam(self.model.parameters(), lr=self.optimizer_lr)
@@ -94,10 +97,50 @@ class ASRLightningModule(pl.LightningModule):
         ctc_waves_len = waves_len_coefs * ctc_reshaped.shape[0]
         loss = self.criterion(ctc_reshaped, texts, ctc_waves_len.long(), texts_len)
 
-        self.log('loss', loss.item(), logger=True)
+        if batch_idx % 500 == 0:
+            batch_size = waves.shape[0]
+            rand_ids = torch.randperm(batch_size)[:self.n_examples]
 
+            sample_waves = waves[rand_ids]
+            sample_waves_len = waves_len[rand_ids]
+            sample_out = model_out[rand_ids]
+            sample_texts = texts[rand_ids]
+            sample_texts_len = texts_len[rand_ids]
+
+            pred_lines, target_lines = self._decode_batch(
+                    sample_out,
+                    sample_texts,
+                    sample_texts_len,
+                )
+
+            table_columns = [
+                    'audio', 'target', 'prediction', 'CER', 'WER',
+                ]
+
+            table_lines = []
+
+            for idx in range(len(rand_ids)):
+                wave = sample_waves[idx][:sample_waves_len[idx]].detach().cpu()
+                target = target_lines[idx]
+                prediction = pred_lines[idx]
+                cer = metrics.cer(pred=[prediction,], target=[target,])
+                wer = metrics.wer(pred=[prediction,], target=[target,])
+
+                table_lines.append([
+                        wandb.Audio(wave, sample_rate=16000),
+                        target,
+                        prediction,
+                        cer,
+                        wer,
+                    ])
+
+            table = wandb.Table(columns=table_columns, data=table_lines)
+            table_name = f'samples_{self.current_epoch}_{batch_idx}'
+            self.logger.experiment.log({table_name: table}, commit=True)
+
+        self.log('loss', loss.item(), logger=True)
         return {
-                'loss': loss.item(),
+                'loss': loss,
             }
 
     def validation_step(self, batch, batch_idx) -> Dict[str, Any]:

@@ -7,14 +7,14 @@ trainer:
   accumulate_grad_batches: 1
   max_epochs: 10
   precision: 32
-  num_sanity_val_steps: 2
+  num_sanity_val_steps: 0
   deterministic: true
   auto_lr_find: false
   logger:
-    - class_path: pytorch_lightning.loggers.WandbLogger
-      init_args:
-        project: hw1-asr
-        save_dir: lightning_logs/
+    class_path: pytorch_lightning.loggers.WandbLogger
+    init_args:
+      project: hw1-asr
+      save_dir: lightning_logs/
 
 model:
   model:
@@ -36,6 +36,7 @@ model:
       reduction: mean
       zero_infinity: false
   optimizer_lr: 0.001
+  n_examples: 2
 
 data:
   train_dataset:
@@ -43,7 +44,7 @@ data:
     init_args:
       root: 'data/'
       url: 'train-clean-360'
-  train_batch_size: 32
+  train_batch_size: 64
   train_num_workers: 32
   val_dataset:
     class_path: src.dataset.LibrispeechDataset

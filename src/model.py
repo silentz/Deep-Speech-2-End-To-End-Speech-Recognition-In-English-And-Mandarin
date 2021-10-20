@@ -45,6 +45,13 @@ class ASRModel(nn.Module):
             )
 
         self.head = nn.Sequential(
+                nn.Dropout(p=0.2),
+                nn.Linear(in_features=rnn_hidden_size, out_features=rnn_hidden_size, bias=True),
+                nn.ReLU(inplace=True),
+                nn.Dropout(p=0.2),
+                nn.Linear(in_features=rnn_hidden_size, out_features=rnn_hidden_size, bias=True),
+                nn.ReLU(inplace=True),
+                nn.Dropout(p=0.2),
                 nn.Linear(in_features=rnn_hidden_size, out_features=n_classes, bias=True),
             )
 

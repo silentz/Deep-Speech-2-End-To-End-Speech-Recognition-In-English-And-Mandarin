@@ -7,7 +7,7 @@ trainer:
   accumulate_grad_batches: 1
   max_epochs: 10
   precision: 32
-  num_sanity_val_steps: 0
+  num_sanity_val_steps: 2
   deterministic: true
   auto_lr_find: false
   logger:
@@ -21,9 +21,9 @@ model:
     class_path: src.model.ASRModel
     init_args:
       n_classes: 29
-      rnn_num_layers: 2
+      rnn_num_layers: 1
       rnn_input_size: 352
-      rnn_hidden_size: 64
+      rnn_hidden_size: 2400
       sample_rate: 16000
       n_fft: 1024
       win_length: 1024
@@ -36,20 +36,20 @@ model:
       reduction: mean
       zero_infinity: false
   optimizer_lr: 0.001
-  n_examples: 2
+  n_examples: 3
 
 data:
+  train_batch_size: 32
+  train_num_workers: 32
   train_dataset:
     class_path: src.dataset.LibrispeechDataset
     init_args:
       root: 'data/'
       url: 'train-clean-360'
-  train_batch_size: 64
-  train_num_workers: 32
+  val_batch_size: 32
+  val_num_workers: 32
   val_dataset:
     class_path: src.dataset.LibrispeechDataset
     init_args:
       root: 'data/'
       url: 'test-clean'
-  val_batch_size: 32
-  val_num_workers: 16

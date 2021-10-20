@@ -62,9 +62,19 @@ class ASRLightningModule(pl.LightningModule):
         self.n_examples = n_examples
 
     def configure_optimizers(self) -> Dict[str, Any]:
-        optim = torch.optim.Adam(self.model.parameters(), lr=self.optimizer_lr)
+        optim = torch.optim.SGD(
+                self.model.parameters(),
+                lr=self.optimizer_lr,
+                momentum=0.9,
+                weight_decay=1e-5,
+            )
+        sched = torch.optim.lr_scheduler.LambdaLR(
+                optim,
+                lr_lambda=lambda x: (0.99 ** x),
+            )
         return {
                 'optimizer': optim,
+                'scheduler': sched,
             }
 
     @staticmethod

@@ -54,6 +54,23 @@ class LJSpeechDataset(Dataset):
             }
 
 
+class PartialDataset(Dataset):
+
+    def __init__(self, dataset: Dataset,
+                       start_idx: int,
+                       finish_idx: int):
+        # interval has form: [start_idx; finish_idx)
+        self.dataset = dataset
+        self.start_idx = start_idx
+        self.finish_idx = finish_idx
+
+    def __getitem__(self, idx: int):
+        return self.dataset[idx + self.start_idx]
+
+    def __len__(self):
+        return self.finish_idx - self.start_idx
+
+
 def collate_fn(values: list) -> Dict[str, Any]:
     waves = [x['wave'] for x in values]
     texts = [x['text'] for x in values]

@@ -9,6 +9,7 @@ class ASRModel(nn.Module):
     def __init__(self, n_classes: int,
                        rnn_num_layers: int,
                        rnn_hidden_size: int,
+                       head_hidden_size: int,
                        n_mels: int):
         super().__init__()
 
@@ -42,13 +43,10 @@ class ASRModel(nn.Module):
 
         self.head = nn.Sequential(
                 nn.Dropout(p=0.2),
-                nn.Linear(in_features=rnn_hidden_size, out_features=rnn_hidden_size, bias=True),
+                nn.Linear(in_features=rnn_hidden_size, out_features=head_hidden_size, bias=True),
                 nn.ReLU(inplace=True),
                 nn.Dropout(p=0.2),
-                nn.Linear(in_features=rnn_hidden_size, out_features=n_classes, bias=True),
-                #  nn.ReLU(inplace=True),
-                #  nn.Dropout(p=0.2),
-                #  nn.Linear(in_features=rnn_hidden_size, out_features=n_classes, bias=True),
+                nn.Linear(in_features=head_hidden_size, out_features=n_classes, bias=True),
             )
 
     def forward(self, X: TensorType['batch', 'n_mels', 'time']):

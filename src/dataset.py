@@ -41,7 +41,7 @@ class LJSpeechDataset(Dataset):
         return len(self.dataset)
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
-        wave, sample_rate, text, _ = self.dataset[idx]
+        wave, sample_rate, _, text = self.dataset[idx]
         wave = torch.mean(wave, dim=0)
         wave = self.transforms(wave.numpy(), sample_rate=sample_rate)
         wave = torch.from_numpy(wave)

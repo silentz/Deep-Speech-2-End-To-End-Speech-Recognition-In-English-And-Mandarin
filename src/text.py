@@ -7,8 +7,8 @@ from fast_ctc_decode import beam_search
 
 
 _idx2char = [
-    '@', ' ', "'", 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
-    'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    '@', ' ', "'", 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+    'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ]
 
 _char2idx = {char: idx for idx, char in enumerate(_idx2char)}
@@ -18,7 +18,8 @@ empty_token_int = _char2idx[empty_token_str]
 
 
 def encode(line: str) -> List[int]:
-    ids = [_char2idx[x] for x in line]
+    line = line.lower().replace(empty_token_str, '')
+    ids = [_char2idx[x] for x in line if x in _char2idx]
     return ids
 
 

@@ -10,11 +10,9 @@ class LibrispeechDataset(Dataset):
 
     def __init__(self, root: str,
                        url: str,
-                       transforms: Callable,
-                       spect_transform: Callable):
+                       transforms: Callable):
         self.dataset = LIBRISPEECH(root=root, url=url, download=True)
         self.transforms = transforms
-        self.spect_transform = spect_transform
 
     def __len__(self):
         return len(self.dataset)
@@ -24,7 +22,6 @@ class LibrispeechDataset(Dataset):
         wave = torch.mean(wave, dim=0)
         wave = self.transforms(wave.numpy(), sample_rate=sample_rate)
         wave = torch.from_numpy(wave)
-        spectrogram = self.spect_transform(wave)
         text = torch.LongTensor(encode(text))
         return {
                 'wave': wave,
@@ -36,15 +33,18 @@ class LibrispeechDataset(Dataset):
 
 class LJSpeechDataset(Dataset):
 
-    def __init__(self, root: str):
+    def __init__(self, root: str, transforms: Callable):
         self.dataset = LJSPEECH(root=root, download=True)
+        self.transforms = transforms
 
     def __len__(self):
         return len(self.dataset)
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
-        wave, _, text, _ = self.dataset[idx]
+        wave, sample_rate, text, _ = self.dataset[idx]
         wave = torch.mean(wave, dim=0)
+        wave = self.transforms(wave.numpy(), sample_rate=sample_rate)
+        wave = torch.from_numpy(wave)
         text = torch.LongTensor(encode(text))
         return {
                 'wave': wave,
@@ -54,7 +54,7 @@ class LJSpeechDataset(Dataset):
             }
 
 
-def librispeech_collate_fn(values: list) -> Dict[str, Any]:
+def collate_fn(values: list) -> Dict[str, Any]:
     waves = [x['wave'] for x in values]
     texts = [x['text'] for x in values]
 

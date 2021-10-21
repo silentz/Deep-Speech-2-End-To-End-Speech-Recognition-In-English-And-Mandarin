@@ -104,6 +104,7 @@ class ASRLightningModule(pl.LightningModule):
         waves_len, texts_len = batch['waves_len'], batch['texts_len']
 
         spectrograms = self.train_spectrogram(waves)
+        spectrograms = spectrograms.clamp(min=1e-5).log()
         model_out = self.model(spectrograms)
 
         ctc_reshaped = torch.transpose(model_out, 0, 1) # swap time and bn dim
@@ -162,6 +163,7 @@ class ASRLightningModule(pl.LightningModule):
         waves_len, texts_len = batch['waves_len'], batch['texts_len']
 
         spectrograms = self.val_spectrogram(waves)
+        spectrograms = spectrograms.clamp(min=1e-5).log()
         model_out = self.model(spectrograms)
 
         ctc_reshaped = torch.transpose(model_out, 0, 1) # swap time and bs dim

@@ -1,22 +1,30 @@
 import torch
 from torch.utils.data import Dataset
 from torch.nn.utils.rnn import pad_sequence
-from torchaudio.datasets import LIBRISPEECH
-from typing import Any, Dict
+from torchaudio.datasets import LIBRISPEECH, LJSPEECH
+from typing import Any, Callable, Dict
 from .text import encode
 
 
 class LibrispeechDataset(Dataset):
 
-    def __init__(self, root: str, url: str):
+    def __init__(self, root: str,
+                       url: str,
+                       transforms: Callable,
+                       spect_transform: Callable):
         self.dataset = LIBRISPEECH(root=root, url=url, download=True)
+        self.transforms = transforms
+        self.spect_transform = spect_transform
 
     def __len__(self):
         return len(self.dataset)
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
-        wave, _, text, _, _, _ = self.dataset[idx]
+        wave, sample_rate, text, _, _, _ = self.dataset[idx]
         wave = torch.mean(wave, dim=0)
+        wave = self.transforms(wave.numpy(), sample_rate=sample_rate)
+        wave = torch.from_numpy(wave)
+        spectrogram = self.spect_transform(wave)
         text = torch.LongTensor(encode(text))
         return {
                 'wave': wave,
@@ -26,20 +34,24 @@ class LibrispeechDataset(Dataset):
             }
 
 
-class OverfitDataset(Dataset):
+class LJSpeechDataset(Dataset):
 
-    def __init__(self, dataset: Dataset,
-                       num_samples: int,
-                       length: int):
-        self.dataset = dataset
-        self.num_samples = num_samples
-        self.length = length
-
-    def __getitem__(self, idx: int):
-        return self.dataset[idx % self.num_samples]
+    def __init__(self, root: str):
+        self.dataset = LJSPEECH(root=root, download=True)
 
     def __len__(self):
-        return self.length
+        return len(self.dataset)
+
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        wave, _, text, _ = self.dataset[idx]
+        wave = torch.mean(wave, dim=0)
+        text = torch.LongTensor(encode(text))
+        return {
+                'wave': wave,
+                'wave_len': len(wave),
+                'text': text,
+                'text_len': len(text),
+            }
 
 
 def librispeech_collate_fn(values: list) -> Dict[str, Any]:

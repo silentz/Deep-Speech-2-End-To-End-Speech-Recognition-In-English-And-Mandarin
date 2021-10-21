@@ -3,12 +3,12 @@ seed_everything: 42
 trainer:
   gpus: 1
   check_val_every_n_epoch: 1
-  limit_val_batches: 4
+  limit_val_batches: 1.0
   fast_dev_run: false
-  accumulate_grad_batches: 1
+  accumulate_grad_batches: 4
   track_grad_norm: -1
-  max_epochs: 100
-  precision: 32
+  max_epochs: 50
+  precision: 16
   num_sanity_val_steps: 2
   deterministic: true
   auto_lr_find: false
@@ -46,10 +46,10 @@ model:
   val_spectrogram:
     class_path: torchaudio.transforms.MelSpectrogram
     init_args:
-      sample_rate: 16000
-      n_fft: 320
-      win_length: 320
-      hop_length: 160
+      sample_rate: 22050
+      n_fft: 440
+      win_length: 440
+      hop_length: 220
       n_mels: 128
   criterion:
     class_path: torch.nn.CTCLoss
@@ -64,15 +64,24 @@ data:
   train_batch_size: 32
   train_num_workers: 32
   train_dataset:
-    class_path: src.dataset.LJSpeechDataset
+    class_path: src.dataset.PartialDataset
     init_args:
-      root: 'data/'
-      transforms: src.augment.train_transforms
+      dataset:
+        class_path: src.dataset.LJSpeechDataset
+        init_args:
+          root: 'data/'
+          transforms: src.augment.train_transforms
+      start_idx: 0
+      finish_idx: 12445
   val_batch_size: 32
   val_num_workers: 32
   val_dataset:
-    class_path: src.dataset.LibrispeechDataset
+    class_path: src.dataset.PartialDataset
     init_args:
-      root: 'data/'
-      url: 'test-clean'
-      transforms: src.augment.val_transforms
+      dataset:
+        class_path: src.dataset.LJSpeechDataset
+        init_args:
+          root: 'data/'
+          transforms: src.augment.val_transforms
+      start_idx: 12445
+      finish_idx: 13100

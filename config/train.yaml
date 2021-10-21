@@ -3,9 +3,10 @@ seed_everything: 42
 trainer:
   gpus: 1
   check_val_every_n_epoch: 1
+  limit_val_batches: 4
   fast_dev_run: false
-  accumulate_grad_batches: 2
-  track_grad_norm: 2
+  accumulate_grad_batches: 1
+  track_grad_norm: -1
   max_epochs: 10
   precision: 32
   num_sanity_val_steps: 2
@@ -22,16 +23,16 @@ model:
     class_path: src.model.ASRModel
     init_args:
       n_classes: 29
-      rnn_num_layers: 3
+      rnn_num_layers: 1
       rnn_hidden_size: 1024
       n_mels: 128
   train_spectrogram:
     class_path: torchaudio.transforms.MelSpectrogram
     init_args:
-      sample_rate: 16000
-      n_fft: 320
-      win_length: 320
-      hop_length: 160
+      sample_rate: 22050
+      n_fft: 440
+      win_length: 440
+      hop_length: 220
       n_mels: 128
   val_spectrogram:
     class_path: torchaudio.transforms.MelSpectrogram
@@ -54,10 +55,9 @@ data:
   train_batch_size: 32
   train_num_workers: 32
   train_dataset:
-    class_path: src.dataset.LibrispeechDataset
+    class_path: src.dataset.LJSpeechDataset
     init_args:
       root: 'data/'
-      url: 'train-clean-360'
       transforms: src.augment.train_transforms
   val_batch_size: 32
   val_num_workers: 32
@@ -66,4 +66,4 @@ data:
     init_args:
       root: 'data/'
       url: 'test-clean'
-      transforms: src.augment.train_transforms
+      transforms: src.augment.val_transforms

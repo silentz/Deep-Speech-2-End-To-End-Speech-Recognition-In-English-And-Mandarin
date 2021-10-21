@@ -153,7 +153,7 @@ class ASRLightningModule(pl.LightningModule):
             table_name = f'samples_{self.current_epoch}_{batch_idx}'
             self.logger.experiment.log({table_name: table}, commit=True)
 
-        self.log('loss', loss.item(), logger=True)
+        self.log('loss', loss.item(), on_step=True, logger=True)
         return {
                 'loss': loss,
             }

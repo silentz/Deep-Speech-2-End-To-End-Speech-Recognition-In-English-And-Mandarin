@@ -13,6 +13,15 @@ _train_transforms = Compose([
     PitchShift(min_semitones=-4, max_semitones=4, p=0.5),
 ])
 
+_val_transforms = Compose([
+
+])
+
+# make transforms serializable for
+# pytorch lightning cli compatability
 
 def train_transforms(*args, **kwargs):
     return _train_transforms(*args, **kwargs)
+
+def val_transforms(*args, **kwargs):
+    return _val_transforms(*args, **kwargs)

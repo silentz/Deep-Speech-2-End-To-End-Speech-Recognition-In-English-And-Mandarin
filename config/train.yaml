@@ -24,6 +24,18 @@ model:
       n_classes: 29
       rnn_num_layers: 3
       rnn_hidden_size: 1024
+      n_mels: 128
+  train_spectrogram:
+    class_path: torchaudio.transforms.MelSpectrogram
+    init_args:
+      sample_rate: 16000
+      n_fft: 320
+      win_length: 320
+      hop_length: 160
+      n_mels: 128
+  val_spectrogram:
+    class_path: torchaudio.transforms.MelSpectrogram
+    init_args:
       sample_rate: 16000
       n_fft: 320
       win_length: 320
@@ -46,6 +58,7 @@ data:
     init_args:
       root: 'data/'
       url: 'train-clean-360'
+      transforms: src.augment.train_transforms
   val_batch_size: 32
   val_num_workers: 32
   val_dataset:
@@ -53,3 +66,4 @@ data:
     init_args:
       root: 'data/'
       url: 'test-clean'
+      transforms: src.augment.train_transforms

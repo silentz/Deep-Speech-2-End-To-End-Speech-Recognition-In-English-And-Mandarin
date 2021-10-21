@@ -10,7 +10,7 @@ from pytorch_lightning.utilities.cli import LightningCLI
 from src import text
 from src import metrics
 from src.model import ASRModel
-from src.dataset import librispeech_collate_fn
+from src.dataset import collate_fn
 
 from typing import (
     Any,
@@ -34,12 +34,12 @@ class LibrispeechDataModule(pl.LightningDataModule):
         self.train_dataloader_kwargs = {
                 'batch_size': train_batch_size,
                 'num_workers': train_num_workers,
-                'collate_fn': librispeech_collate_fn,
+                'collate_fn': collate_fn,
             }
         self.val_dataloader_kwargs = {
                 'batch_size': val_batch_size,
                 'num_workers': val_num_workers,
-                'collate_fn': librispeech_collate_fn,
+                'collate_fn': collate_fn,
             }
 
     def train_dataloader(self) -> DataLoader:
@@ -54,23 +54,26 @@ class ASRLightningModule(pl.LightningModule):
     def __init__(self, model: ASRModel,
                        criterion: nn.Module,
                        optimizer_lr: float,
+                       train_spectrogram: nn.Module,
+                       val_spectrogram: nn.Module,
                        n_examples: int):
         super().__init__()
         self.model = model
         self.criterion = criterion
         self.optimizer_lr = optimizer_lr
         self.n_examples = n_examples
+        self.train_spectrogram = train_spectrogram
+        self.val_spectrogram = val_spectrogram
 
     def configure_optimizers(self) -> Dict[str, Any]:
-        optim = torch.optim.SGD(
+        optim = torch.optim.Adam(
                 self.model.parameters(),
                 lr=self.optimizer_lr,
-                momentum=0.9,
                 weight_decay=1e-5,
             )
         sched = torch.optim.lr_scheduler.LambdaLR(
                 optim,
-                lr_lambda=lambda x: (0.99 ** x),
+                lr_lambda=lambda epoch: (0.99 ** epoch),
             )
         return {
                 'optimizer': optim,
@@ -100,7 +103,8 @@ class ASRLightningModule(pl.LightningModule):
         waves, texts = batch['waves'], batch['texts']
         waves_len, texts_len = batch['waves_len'], batch['texts_len']
 
-        model_out = self.model(waves)
+        spectrograms = self.train_spectrogram(waves)
+        model_out = self.model(spectrograms)
 
         ctc_reshaped = torch.transpose(model_out, 0, 1) # swap time and bn dim
         waves_len_coefs = waves_len / waves.shape[1]
@@ -157,7 +161,8 @@ class ASRLightningModule(pl.LightningModule):
         waves, texts = batch['waves'], batch['texts']
         waves_len, texts_len = batch['waves_len'], batch['texts_len']
 
-        model_out = self.model(waves)
+        spectrograms = self.val_spectrogram(waves)
+        model_out = self.model(spectrograms)
 
         ctc_reshaped = torch.transpose(model_out, 0, 1) # swap time and bs dim
         waves_len_coefs = waves_len / waves.shape[1]

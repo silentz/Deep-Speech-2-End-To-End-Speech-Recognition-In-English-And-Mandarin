@@ -7,7 +7,7 @@ trainer:
   fast_dev_run: false
   accumulate_grad_batches: 1
   track_grad_norm: -1
-  max_epochs: 50
+  max_epochs: 100
   precision: 32
   num_sanity_val_steps: 2
   deterministic: true
@@ -17,14 +17,23 @@ trainer:
     init_args:
       project: hw1-asr
       save_dir: lightning_logs/
+  callbacks:
+    - class_path: pytorch_lightning.callbacks.model_checkpoint.ModelCheckpoint
+      init_args:
+        dirpath: checkpoints/
+        filename: "{epoch:03d}-{val_cer:.4f}-{val_wer:.4f}"
+        monitor: "val_cer"
+        mode: "min"
+        save_top_k: -1
 
 model:
   model:
     class_path: src.model.ASRModel
     init_args:
       n_classes: 29
-      rnn_num_layers: 1
-      rnn_hidden_size: 1024
+      rnn_num_layers: 3
+      rnn_hidden_size: 800
+      head_hidden_size: 1600
       n_mels: 128
   train_spectrogram:
     class_path: torchaudio.transforms.MelSpectrogram

@@ -25,10 +25,14 @@ class DataModule(pl.LightningDataModule):
                        train_num_workers: int,
                        val_dataset: Dataset,
                        val_batch_size: int,
-                       val_num_workers: int):
+                       val_num_workers: int,
+                       test_dataset: Dataset,
+                       test_batch_size: int,
+                       test_num_workers: int):
         super().__init__()
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
+        self.test_dataset = test_dataset
 
         self.train_dataloader_kwargs = {
                 'batch_size': train_batch_size,
@@ -40,12 +44,20 @@ class DataModule(pl.LightningDataModule):
                 'num_workers': val_num_workers,
                 'collate_fn': collate_fn,
             }
+        self.test_dataloader_kwargs = {
+                'batch_size': test_batch_size,
+                'num_workers': test_num_workers,
+                'collate_fn': collate_fn,
+            }
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(self.train_dataset, **self.train_dataloader_kwargs)
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(self.val_dataset, **self.val_dataloader_kwargs)
+
+    def test_dataloader(self) -> DataLoader:
+        return DataLoader(self.test_dataset, **self.test_dataloader_kwargs)
 
 
 class Module(pl.LightningModule):

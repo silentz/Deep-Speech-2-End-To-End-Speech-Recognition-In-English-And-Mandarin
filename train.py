@@ -19,6 +19,7 @@ if __name__ == '__main__':
     LightningCLI(
             model_class=Module,
             datamodule_class=DataModule,
+            save_config_callback=None,
             trainer_defaults={
                 'logger': logger,
             },

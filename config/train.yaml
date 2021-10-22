@@ -49,10 +49,10 @@ model:
   test_spectrogram:
     class_path: torchaudio.transforms.MelSpectrogram
     init_args:
-      sample_rate: 22050
-      n_fft: 440
-      win_length: 440
-      hop_length: 220
+      sample_rate: 16000
+      n_fft: 320
+      win_length: 320
+      hop_length: 160
       n_mels: 128
   criterion:
     class_path: torch.nn.CTCLoss
@@ -91,12 +91,9 @@ data:
   test_batch_size: 32
   test_num_workers: 32
   test_dataset:
-    class_path: src.dataset.PartialDataset
+    class_path: src.dataset.LibrispeechDataset
     init_args:
-      dataset:
-        class_path: src.dataset.LJSpeechDataset
-        init_args:
-          root: 'data/'
-          transforms: src.augment.val_transforms
-      start_idx: 12445
-      finish_idx: 13100
+      root: 'data/'
+      url: 'test-clean'
+      transforms: src.augment.val_transforms
+

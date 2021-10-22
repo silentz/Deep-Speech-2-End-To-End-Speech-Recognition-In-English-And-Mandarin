@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings('ignore')
+
 from pytorch_lightning.utilities.cli import LightningCLI
 from src.lightning import (
     Module,

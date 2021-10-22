@@ -67,6 +67,7 @@ class Module(pl.LightningModule):
                        optimizer_lr: float,
                        train_spectrogram: nn.Module,
                        val_spectrogram: nn.Module,
+                       test_spectrogram: nn.Module,
                        n_examples: int):
         super().__init__()
         self.model = model
@@ -75,6 +76,7 @@ class Module(pl.LightningModule):
         self.n_examples = n_examples
         self.train_spectrogram = train_spectrogram
         self.val_spectrogram = val_spectrogram
+        self.test_spectrogram = test_spectrogram
 
     def configure_optimizers(self) -> Dict[str, Any]:
         optim = torch.optim.Adam(
@@ -191,9 +193,6 @@ class Module(pl.LightningModule):
             }
 
     def validation_epoch_end(self, outputs: List[Dict[str, Any]]) -> None:
-        if isinstance(outputs, dict):
-            outputs = [outputs,]
-
         pred = []
         target = []
 
@@ -205,4 +204,40 @@ class Module(pl.LightningModule):
         cer = metrics.cer(pred=pred, target=target)
         self.log('val_cer', cer, logger=True)
         self.log('val_wer', wer, logger=True)
+
+    def test_step(self, batch, batch_idx) -> Dict[str, Any]:
+        waves, texts = batch['waves'], batch['texts']
+        waves_len, texts_len = batch['waves_len'], batch['texts_len']
+
+        spectrograms = self.test_spectrogram(waves)
+        spectrograms = spectrograms.clamp(min=1e-5).log()
+        model_out = self.model(spectrograms)
+
+        ctc_reshaped = torch.transpose(model_out, 0, 1) # swap time and bs dim
+        waves_len_coefs = waves_len / waves.shape[1]
+        ctc_waves_len = waves_len_coefs * ctc_reshaped.shape[0]
+        loss = self.criterion(ctc_reshaped, texts, ctc_waves_len.long(), texts_len)
+
+        predicted_lines, target_lines = self._decode_batch(model_out, texts, texts_len)
+
+        return {
+                'loss': loss.item(),
+                'pred_lines': predicted_lines,
+                'target_lines': target_lines,
+            }
+
+    def test_epoch_end(self, outputs: List[Dict[str, Any]]) -> None:
+        pred = []
+        target = []
+
+        for batch in outputs:
+            pred.extend(batch['pred_lines'])
+            target.extend(batch['target_lines'])
+
+        wer = metrics.wer(pred=pred, target=target)
+        cer = metrics.cer(pred=pred, target=target)
+
+        print('CER:', cer)
+        print('WER:', wer)
+
 

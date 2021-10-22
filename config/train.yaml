@@ -30,30 +30,6 @@ model:
       rnn_hidden_size: 800
       head_hidden_size: 1600
       n_mels: 128
-  train_spectrogram:
-    class_path: torchaudio.transforms.MelSpectrogram
-    init_args:
-      sample_rate: 22050
-      n_fft: 440
-      win_length: 440
-      hop_length: 220
-      n_mels: 128
-  val_spectrogram:
-    class_path: torchaudio.transforms.MelSpectrogram
-    init_args:
-      sample_rate: 22050
-      n_fft: 440
-      win_length: 440
-      hop_length: 220
-      n_mels: 128
-  test_spectrogram:
-    class_path: torchaudio.transforms.MelSpectrogram
-    init_args:
-      sample_rate: 16000
-      n_fft: 320
-      win_length: 320
-      hop_length: 160
-      n_mels: 128
   criterion:
     class_path: torch.nn.CTCLoss
     init_args:
@@ -74,6 +50,14 @@ data:
         init_args:
           root: 'data/'
           transforms: src.augment.train_transforms
+          spectrogram:
+            class_path: torchaudio.transforms.MelSpectrogram
+            init_args:
+              sample_rate: 22050
+              n_fft: 440
+              win_length: 440
+              hop_length: 220
+              n_mels: 128
       start_idx: 0
       finish_idx: 12445
   val_batch_size: 32
@@ -86,6 +70,14 @@ data:
         init_args:
           root: 'data/'
           transforms: src.augment.val_transforms
+          spectrogram:
+            class_path: torchaudio.transforms.MelSpectrogram
+            init_args:
+              sample_rate: 22050
+              n_fft: 440
+              win_length: 440
+              hop_length: 220
+              n_mels: 128
       start_idx: 12445
       finish_idx: 13100
   test_batch_size: 32
@@ -96,4 +88,12 @@ data:
       root: 'data/'
       url: 'test-clean'
       transforms: src.augment.val_transforms
+      spectrogram:
+        class_path: torchaudio.transforms.MelSpectrogram
+        init_args:
+          sample_rate: 16000
+          n_fft: 320
+          win_length: 320
+          hop_length: 160
+          n_mels: 128
 

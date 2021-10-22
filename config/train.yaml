@@ -10,7 +10,7 @@ trainer:
   max_epochs: 50
   precision: 16
   num_sanity_val_steps: 2
-  deterministic: true
+  deterministic: false
   auto_lr_find: false
   callbacks:
     - class_path: pytorch_lightning.callbacks.model_checkpoint.ModelCheckpoint

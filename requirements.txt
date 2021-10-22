@@ -104,7 +104,7 @@ typeguard==2.13.0
 typing-extensions==3.10.0.2
 urllib3==1.26.7
 validators==0.18.2
-wandb==0.12.4
+wandb==0.12.5
 Werkzeug==2.0.2
 xxhash==2.0.2
 yarl==1.7.0

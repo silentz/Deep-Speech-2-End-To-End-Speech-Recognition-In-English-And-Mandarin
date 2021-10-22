@@ -65,18 +65,12 @@ class Module(pl.LightningModule):
     def __init__(self, model: ASRModel,
                        criterion: nn.Module,
                        optimizer_lr: float,
-                       train_spectrogram: nn.Module,
-                       val_spectrogram: nn.Module,
-                       test_spectrogram: nn.Module,
                        n_examples: int):
         super().__init__()
         self.model = model
         self.criterion = criterion
         self.optimizer_lr = optimizer_lr
         self.n_examples = n_examples
-        self.train_spectrogram = train_spectrogram
-        self.val_spectrogram = val_spectrogram
-        self.test_spectrogram = test_spectrogram
 
     def configure_optimizers(self) -> Dict[str, Any]:
         optim = torch.optim.Adam(
@@ -115,9 +109,8 @@ class Module(pl.LightningModule):
     def training_step(self, batch, batch_idx) -> Dict[str, Any]:
         waves, texts = batch['waves'], batch['texts']
         waves_len, texts_len = batch['waves_len'], batch['texts_len']
+        spectrograms = batch['spectrograms']
 
-        spectrograms = self.train_spectrogram(waves)
-        spectrograms = spectrograms.clamp(min=1e-5).log()
         model_out = self.model(spectrograms)
 
         ctc_reshaped = torch.transpose(model_out, 0, 1) # swap time and bn dim
@@ -174,9 +167,8 @@ class Module(pl.LightningModule):
     def validation_step(self, batch, batch_idx) -> Dict[str, Any]:
         waves, texts = batch['waves'], batch['texts']
         waves_len, texts_len = batch['waves_len'], batch['texts_len']
+        spectrograms = batch['spectrograms']
 
-        spectrograms = self.val_spectrogram(waves)
-        spectrograms = spectrograms.clamp(min=1e-5).log()
         model_out = self.model(spectrograms)
 
         ctc_reshaped = torch.transpose(model_out, 0, 1) # swap time and bs dim
@@ -208,9 +200,8 @@ class Module(pl.LightningModule):
     def test_step(self, batch, batch_idx) -> Dict[str, Any]:
         waves, texts = batch['waves'], batch['texts']
         waves_len, texts_len = batch['waves_len'], batch['texts_len']
+        spectrograms = batch['spectrograms']
 
-        spectrograms = self.test_spectrogram(waves)
-        spectrograms = spectrograms.clamp(min=1e-5).log()
         model_out = self.model(spectrograms)
 
         ctc_reshaped = torch.transpose(model_out, 0, 1) # swap time and bs dim

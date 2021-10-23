@@ -15,7 +15,7 @@ trainer:
   callbacks:
     - class_path: pytorch_lightning.callbacks.model_checkpoint.ModelCheckpoint
       init_args:
-        dirpath: checkpoints/
+        dirpath: checkpoints/stage1
         filename: "{epoch:03d}-{val_cer:.4f}-{val_wer:.4f}"
         monitor: "val_cer"
         mode: "min"

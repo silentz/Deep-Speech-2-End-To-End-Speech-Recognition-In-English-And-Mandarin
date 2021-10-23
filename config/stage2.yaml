@@ -1,0 +1,91 @@
+seed_everything: 42
+
+trainer:
+  gpus: 1
+  check_val_every_n_epoch: 1
+  limit_val_batches: 4
+  fast_dev_run: false
+  accumulate_grad_batches: 4
+  track_grad_norm: -1
+  max_epochs: 100
+  precision: 16
+  num_sanity_val_steps: 2
+  deterministic: false
+  auto_lr_find: false
+  callbacks:
+    - class_path: pytorch_lightning.callbacks.model_checkpoint.ModelCheckpoint
+      init_args:
+        dirpath: checkpoints/stage2
+        filename: "{epoch:03d}-{val_cer:.4f}-{val_wer:.4f}"
+        monitor: "val_cer"
+        mode: "min"
+        save_top_k: -1
+
+model:
+  model:
+    class_path: src.model.ASRModel
+    init_args:
+      n_classes: 29
+      rnn_num_layers: 3
+      rnn_hidden_size: 800
+      head_hidden_size: 1600
+      n_mels: 128
+  criterion:
+    class_path: torch.nn.CTCLoss
+    init_args:
+      blank: 0
+      reduction: mean
+      zero_infinity: false
+  optimizer_lr: 0.0001
+  n_examples: 3
+
+data:
+  train_batch_size: 32
+  train_num_workers: 32
+  train_dataset:
+    class_path: src.dataset.LibrispeechDataset
+    init_args:
+      root: 'data/'
+      url: 'train-clean-360'
+      transforms: src.augment.train_transforms
+      spectrogram:
+        class_path: torchaudio.transforms.MelSpectrogram
+        init_args:
+          sample_rate: 16000
+          n_fft: 320
+          win_length: 320
+          hop_length: 160
+          n_mels: 128
+  val_batch_size: 32
+  val_num_workers: 32
+  val_dataset:
+    class_path: src.dataset.LibrispeechDataset
+    init_args:
+      root: 'data/'
+      url: 'test-clean'
+      transforms: src.augment.train_transforms
+      spectrogram:
+        class_path: torchaudio.transforms.MelSpectrogram
+        init_args:
+          sample_rate: 16000
+          n_fft: 320
+          win_length: 320
+          hop_length: 160
+          n_mels: 128
+  test_batch_size: 32
+  test_num_workers: 32
+  test_dataset:
+    class_path: src.dataset.LibrispeechDataset
+    init_args:
+      root: 'data/'
+      url: 'test-clean'
+      transforms: src.augment.train_transforms
+      spectrogram:
+        class_path: torchaudio.transforms.MelSpectrogram
+        init_args:
+          sample_rate: 16000
+          n_fft: 320
+          win_length: 320
+          hop_length: 160
+          n_mels: 128
+

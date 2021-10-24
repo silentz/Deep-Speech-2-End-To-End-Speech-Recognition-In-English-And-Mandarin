@@ -8,6 +8,7 @@ import pytorch_lightning as pl
 
 from . import text
 from . import metrics
+from . import decoder
 from .model import ASRModel
 from .dataset import collate_fn
 
@@ -91,7 +92,7 @@ class Module(pl.LightningModule):
     def _decode_batch(model_out: torch.Tensor,
                       texts: torch.LongTensor,
                       texts_len: torch.LongTensor):
-        predicted_lines = text.ctc_decode(model_out)
+        predicted_lines = decoder.ctc_decode(model_out)
         target_lines = [text.decode(x[:tlen]) for x, tlen in zip(texts, texts_len)]
         return predicted_lines, target_lines
 
@@ -219,5 +220,4 @@ class Module(pl.LightningModule):
 
         print('CER:', cer)
         print('WER:', wer)
-
 

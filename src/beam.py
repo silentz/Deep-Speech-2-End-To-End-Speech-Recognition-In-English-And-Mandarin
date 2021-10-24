@@ -1,19 +1,11 @@
-import torch
 import numpy as np
-
 from ctcdecode import CTCBeamDecoder
-
-from typing import (
-    Callable,
-    List,
-)
 
 
 def my_beam_search(probs: np.ndarray,
                    alphabet: str,
                    empty_token: str,
-                   beam_size: int,
-                   language_model: Callable = None) -> str:
+                   beam_size: int) -> str:
 
     def clean_text(text: str) -> str:
         text = empty_token + text
@@ -33,10 +25,6 @@ def my_beam_search(probs: np.ndarray,
             for letter_idx in range(letters):
                 new_cand = cand + alphabet[letter_idx]
                 score = cand_prob + np.log(probs[idx, letter_idx])
-                #  if language_model is not None and len(new_cand) > 10:
-                #      tmp_text = clean_text(new_cand)
-                #      lm_score = language_model.score(tmp_text, bos=True, eos=False)
-                #      score += lm_score
                 new_candidates.append((new_cand, score))
 
         new_candidates = sorted(new_candidates, key=lambda x: x[1])
@@ -48,32 +36,42 @@ def my_beam_search(probs: np.ndarray,
     return result
 
 
+class ExternalBeamSearch:
 
-class CustomDecoder:
-
-    def __init__(self, alphabet: str,
-                       model_path: str = None):
+    def __init__(self, labels: str,
+                       model_path: str = None,
+                       alpha: float = 0.,
+                       beta: float = 0.,
+                       cutoff_top_n: int = 40,
+                       cutoff_prob: float = 1.,
+                       beam_width: int = 200,
+                       num_processes: int = 32,
+                       blank_id: int = 0,
+                       log_probs_input: bool = True):
         self.decoder = CTCBeamDecoder(
-            labels=alphabet,
+            labels=labels,
             model_path=model_path,
-            alpha=1.,
-            beta=1.,
-            cutoff_top_n=40,
-            cutoff_prob=1.0,
-            beam_width=100,
-            num_processes=16,
-            blank_id=0,
-            log_probs_input=True,
+            alpha=alpha,
+            beta=beta,
+            cutoff_top_n=cutoff_top_n,
+            cutoff_prob=cutoff_prob,
+            beam_width=beam_width,
+            num_processes=num_processes,
+            blank_id=blank_id,
+            log_probs_input=log_probs_input,
         )
 
     def decode(self, probs):
-        batch_size = probs.shape[0]
-        results, scores, _, lens = self.decoder.decode(probs)
+        results, _, _, lens = self.decoder.decode(probs)
+        batch_size, n_beams, _ = results.shape
         result = []
 
         for idx in range(batch_size):
-            top_beam = results[idx][0]
-            top_beam = top_beam[:lens[idx][0]]
-            result.append(top_beam.numpy().tolist())
+            item = []
+            for beam_idx in range(n_beams):
+                beam = results[idx][beam_idx]
+                beam = beam[:lens[idx][beam_idx]]
+                item.append(beam)
+            result.append(item)
 
         return result

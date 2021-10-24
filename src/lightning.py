@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 
 import wandb
 import pytorch_lightning as pl
+from wandb.sdk.data_types import Image
 
 from . import text
 from . import metrics
@@ -113,6 +114,7 @@ class Module(pl.LightningModule):
             rand_ids = torch.randperm(batch_size)[:self.n_examples]
 
             sample_waves = waves[rand_ids]
+            sample_spectrograms = spectrograms[rand_ids]
             sample_waves_len = waves_len[rand_ids]
             sample_out = model_out[rand_ids]
             sample_texts = texts[rand_ids]
@@ -125,13 +127,14 @@ class Module(pl.LightningModule):
                 )
 
             table_columns = [
-                    'audio', 'target', 'prediction', 'CER', 'WER',
+                    'audio', 'spectrogram', 'target', 'prediction', 'CER', 'WER',
                 ]
 
             table_lines = []
 
             for idx in range(len(rand_ids)):
                 wave = sample_waves[idx][:sample_waves_len[idx]].detach().cpu()
+                spectrogram = sample_spectrograms[idx]
                 target = target_lines[idx]
                 prediction = pred_lines[idx]
                 cer = metrics.cer(pred=[prediction,], target=[target,])
@@ -139,6 +142,7 @@ class Module(pl.LightningModule):
 
                 table_lines.append([
                         wandb.Audio(wave, sample_rate=16000),
+                        wandb.Image(torch.transpose(spectrogram, 0, 1)),
                         target,
                         prediction,
                         cer,

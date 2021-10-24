@@ -35,3 +35,17 @@ cd ctcdecode && pip install . && cd ..
 ```bash
 ./train.sh
 ```
+
+### Логи тренировки модели
+
+#### Stage 1 (LJSpeech)
+
+<img src="images/stage1_loss.png" width="500" />
+<img src="images/stage1_cer.png" width="500" /> 
+<img src="images/stage1_wer.png" width="500" />
+
+#### Stage 2 (Librispeech train-clean-360)
+
+<img src="images/stage2_loss.png" width="500" />
+<img src="images/stage2_cer.png" width="500" /> 
+<img src="images/stage2_wer.png" width="500" />

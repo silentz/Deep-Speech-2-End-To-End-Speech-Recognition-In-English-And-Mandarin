@@ -1,5 +1,13 @@
 # Homework #1: ASR
 
+Модель, взятая за основу: DeepSpeech2
+
+CER на test-clean: `0.260732`
+
+WER на test-clean: `0.618628`
+
+<img src='images/result.png' width='600'>
+
 ### Как вопспроизвести модель
 
 #### 1. Настраиваем виртуальное окружение

@@ -91,19 +91,8 @@ class Module(pl.LightningModule):
     def _decode_batch(model_out: torch.Tensor,
                       texts: torch.LongTensor,
                       texts_len: torch.LongTensor):
-        probs = torch.exp(model_out.detach())
-        batch_size = probs.shape[0]
-        predicted_lines = []
-        target_lines = []
-
-        for idx in range(batch_size):
-            pred_line = text.ctc_decode(probs[idx], size=100)
-            predicted_lines.append(pred_line)
-
-            targ_line = texts[idx][:texts_len[idx]]
-            targ_line = text.decode(targ_line)
-            target_lines.append(targ_line)
-
+        predicted_lines = text.ctc_decode(model_out)
+        target_lines = [text.decode(x[:tlen]) for x, tlen in zip(texts, texts_len)]
         return predicted_lines, target_lines
 
     def training_step(self, batch, batch_idx) -> Dict[str, Any]:

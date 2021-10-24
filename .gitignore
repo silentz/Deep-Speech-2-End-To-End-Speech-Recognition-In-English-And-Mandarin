@@ -8,7 +8,9 @@ data/*
 venv/
 lightning_logs/
 checkpoints/*
-!checkpoints/**/.gitkeep
+!checkpoints/.gitkeep
+!checkpoints/stage1/.gitkeep
+!checkpoints/stage2/.gitkeep
 ctcdecode/
 
 # system specific

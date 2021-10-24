@@ -1,15 +1,19 @@
+import torch
 import numpy as np
+
+from ctcdecode import CTCBeamDecoder
+
 from typing import (
     Callable,
     List,
 )
 
 
-def beam_search(probs: np.ndarray,
-                alphabet: str,
-                empty_token: str,
-                beam_size: int,
-                language_model: Callable = None) -> str:
+def my_beam_search(probs: np.ndarray,
+                   alphabet: str,
+                   empty_token: str,
+                   beam_size: int,
+                   language_model: Callable = None) -> str:
 
     def clean_text(text: str) -> str:
         text = empty_token + text
@@ -43,3 +47,33 @@ def beam_search(probs: np.ndarray,
     result = clean_text(result)
     return result
 
+
+
+class CustomDecoder:
+
+    def __init__(self, alphabet: str,
+                       model_path: str = None):
+        self.decoder = CTCBeamDecoder(
+            labels=alphabet,
+            model_path=model_path,
+            alpha=1.,
+            beta=1.,
+            cutoff_top_n=40,
+            cutoff_prob=1.0,
+            beam_width=100,
+            num_processes=16,
+            blank_id=0,
+            log_probs_input=True,
+        )
+
+    def decode(self, probs):
+        batch_size = probs.shape[0]
+        results, scores, _, lens = self.decoder.decode(probs)
+        result = []
+
+        for idx in range(batch_size):
+            top_beam = results[idx][0]
+            top_beam = top_beam[:lens[idx][0]]
+            result.append(top_beam.numpy().tolist())
+
+        return result

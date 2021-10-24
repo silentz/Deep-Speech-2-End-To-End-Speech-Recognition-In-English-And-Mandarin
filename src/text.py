@@ -3,7 +3,8 @@ import numpy as np
 
 from typing import List
 from torchtyping import TensorType
-from fast_ctc_decode import beam_search
+from fast_ctc_decode import beam_search as lib_beam_search
+from .beam import my_beam_search, CustomDecoder
 
 
 _idx2char = [
@@ -27,12 +28,17 @@ def decode(vector: List[int]) -> str:
     line = ''.join(_idx2char[x] for x in vector)
     return line
 
+_decoder_alphabet = ''.join(_idx2char).replace(empty_token_str, '_')
+_decoder = CustomDecoder(_decoder_alphabet)
 
-def ctc_decode(probs: TensorType['time', 'n_classes'], size: int = 1):
-    alphabet = ''.join(_idx2char)
+def ctc_decode(probs: TensorType['batch', 'time', 'n_classes'], size: int = 1):
+    #  alphabet = ''.join(_idx2char)
     if isinstance(probs, list):
-        probs = np.array(probs)
-    if isinstance(probs, torch.Tensor):
-        probs = probs.detach().cpu().numpy()
-    line, _ = beam_search(probs, alphabet, beam_size=size)
-    return line
+        probs = torch.tensor(probs)
+    if isinstance(probs, np.ndarray):
+        probs = torch.from_numpy(probs)
+    #  line = lib_beam_search(probs, alphabet, beam_size=size)
+    #  line = my_beam_search(probs, alphabet, empty_token=empty_token_str, beam_size=size)
+    lines = _decoder.decode(probs)
+    lines = [decode(x) for x in lines]
+    return lines
